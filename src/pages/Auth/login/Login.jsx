@@ -1,0 +1,146 @@
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "../../../schema/loginSchema";
+import { loginData } from "../../../services/loginservices";
+import  {useContext} from "react";
+import { UserContext } from './../../../context/UserContext';
+
+export default function Login() {
+  const navigate = useNavigate();
+  const { saveUser } = useContext(UserContext);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+async function onSubmitForm(data) {
+  try {
+    const response = await loginData(data);
+
+    // console.log("Response:", response);
+        saveUser(response.data.user);
+
+
+    localStorage.setItem("user-token", response.data.token || response.data.data.token);
+
+    console.log("Saved Token:", localStorage.getItem("token"));
+
+navigate("/", { replace: true });
+  } catch (error) {
+    console.log("Error status:", error.response?.status || "No response");
+    console.log("Error data:", error.response?.data || error.message);
+  }
+}
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-stone-950 px-4">
+      <div
+        className="p-[1px] rounded-3xl bg-gradient-to-r 
+    from-[#00BFFF] via-[#00E5FF] to-[#0099FF] 
+    shadow-[0_0_20px_rgba(0,191,255,0.35)]"
+      >
+        {/* Card */}
+        <div
+          className="w-[340px] lg:w-[420px]
+      bg-[#0A0A0A] 
+      rounded-3xl 
+      border border-white/5
+      p-8 lg:p-10
+      flex flex-col gap-6"
+        >
+          {/* Title */}
+          <h1 className="text-2xl lg:text-3xl font-bold text-center text-white">
+            Login to SocialHub
+          </h1>
+
+          {/* Form */}
+          <form
+            onSubmit={handleSubmit(onSubmitForm)}
+            className="flex flex-col gap-4"
+          >
+            {/* Email */}
+            <div className="flex flex-col gap-1">
+              <input
+                type="email"
+                placeholder="Email Address"
+  autoComplete="email" 
+                {...register("email")}
+                className="w-full h-12 px-4 
+            bg-[#111] border border-white/10 
+            text-white placeholder:text-gray-500 
+            rounded-xl
+            focus:outline-none 
+            focus:ring-2 focus:ring-cyan-400/40 
+            focus:border-cyan-400
+            transition duration-200"
+              />
+              {errors.email && (
+                <p className="text-red-400 text-sm">{errors.email.message}</p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="flex flex-col gap-1">
+              <input
+                type="password"
+                placeholder="Enter your password"
+                  autoComplete="current-password" 
+
+                {...register("password")}
+                className="w-full h-12 px-4 
+            bg-[#111] border border-white/10 
+            text-white placeholder:text-gray-500 
+            rounded-xl
+            focus:outline-none 
+            focus:ring-2 focus:ring-cyan-400/40 
+            focus:border-cyan-400
+            transition duration-200"
+              />
+              {errors.password && (
+                <p className="text-red-400 text-sm">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {/* Button */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-12 
+          bg-gradient-to-r from-cyan-500 to-blue-600
+          hover:from-cyan-400 hover:to-blue-500
+          text-white rounded-xl font-semibold 
+          transition duration-300 
+          hover:scale-[1.02] active:scale-[0.98]
+          disabled:opacity-70 mt-2 cursor-pointer"
+            >
+              {isSubmitting ? "Logging in..." : "Log In"}
+            </button>
+
+            {/* Register */}
+            <p className="text-center text-sm text-gray-500 pt-2">
+              Don't have an account?
+              <Link
+                to="/auth/register"
+                className="text-cyan-400 font-medium hover:underline"
+              >
+                Sign Up
+              </Link>
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
